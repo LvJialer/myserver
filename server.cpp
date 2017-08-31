@@ -4,6 +4,7 @@
 #include<sys/types.h>
 #include<netinet/in.h>
 #include<cstring>
+#include<cstdlib>
 using namespace std;
 int main(int argc,char*argv[]){
 	cout<<"Welcome to myserver!"<<endl;

@@ -7,7 +7,7 @@ private:
 	int processnum;
 	int listenfd;
 	process*subprocess;
-	int idx=-1;
+	int idx;
 	void runparent();
 	void runchild();
 	static processpool*pool;

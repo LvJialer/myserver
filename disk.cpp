@@ -2,10 +2,11 @@
 #include<cstring>
 #include<unistd.h>
 #include<iostream>
+#include<cstdlib>
 using namespace std;
 extern "C" void getdisk(char*t){
 	FILE*fd=popen("df -lh","r");
-	if(fd==nullptr){cout<<"popen error"<<endl;exit(1);}
+	if(fd==NULL){cout<<"popen error"<<endl;exit(1);}
 	char c[600];for(int i=0;i<600;i++){c[i]='\0';}
 	fread(c,600,1,fd);
 	strcat(t,"<table><tr><td>");

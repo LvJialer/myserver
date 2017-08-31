@@ -8,8 +8,9 @@
 #include<string>
 #include<dlfcn.h>
 #include<cstring>
+#include<cstdlib>
 using namespace std;
-processpool::processpool(int listenfd,int processnum):listenfd(listenfd),processnum(processnum){
+processpool::processpool(int listenfd,int processnum):listenfd(listenfd),processnum(processnum),idx(-1){
 	subprocess=new process[processnum];
 	for(int i=0;i<processnum;i++){
 		if(pipe(subprocess[i].pipefd)<0){cout<<"pipe num "<<"i"<<" error"<<endl;}
@@ -20,7 +21,7 @@ processpool::processpool(int listenfd,int processnum):listenfd(listenfd),process
 	}
 }
 processpool*processpool::get(int listenfd){
-	if(pool==nullptr){
+	if(pool==NULL){
 		pool=new processpool(listenfd);
 	}
 	return pool;
@@ -52,7 +53,7 @@ void processpool::runchild(){
 				void*handle;
 				void(*time)(char*);
 				handle=dlopen("./a_time.so",RTLD_LAZY);
-				if(handle==nullptr){cout<<"dlfcn error"<<endl;}
+				if(handle==NULL){cout<<"dlfcn error"<<endl;}
 				*(void**)(&time)=dlsym(handle,"gettime");
 				char buff[50];for(int i=0;i<50;i++){buff[i]='\0';}
 				(*time)(buff);
@@ -65,7 +66,7 @@ void processpool::runchild(){
 				void*handle;
 				void(*version)(char*);
 				handle=dlopen("./b_version.so",RTLD_LAZY);
-				if(handle==nullptr){cout<<"dlfcn error"<<endl;}
+				if(handle==NULL){cout<<"dlfcn error"<<endl;}
 				*(void**)(&version)=dlsym(handle,"getversion");
 				char*buff=new char[50];for(int i=0;i<50;i++){buff[i]='\0';}
 				(*version)(buff);
@@ -78,7 +79,7 @@ void processpool::runchild(){
 				void*handle;
 				void(*disk)(char*);
 				handle=dlopen("./c_disk.so",RTLD_LAZY);
-				if(handle==nullptr){cout<<"dlfcn error"<<endl;}
+				if(handle==NULL){cout<<"dlfcn error"<<endl;}
 				*(void**)(&disk)=dlsym(handle,"getdisk");
 				char*buff=new char[1300];for(int i=0;i<1300;i++){buff[i]='\0';}
 				(*disk)(buff);
@@ -91,9 +92,9 @@ void processpool::runchild(){
 				void*handle;
 				void(*process)(char*);
 				handle=dlopen("./d_process.so",RTLD_LAZY);
-				if(handle==nullptr){cout<<"dlfcn error"<<endl;}
+				if(handle==NULL){cout<<"dlfcn error"<<endl;}
 				*(void**)(&process)=dlsym(handle,"getprocess");
-				char*buff=new char[2000];for(int i=0;i<2000;i++){buff[i]='\0';}
+				char*buff=new char[4096];for(int i=0;i<4096;i++){buff[i]='\0';}
 				(*process)(buff);
 				strcat(sen,"<br><b>The Processes of the server is:</b><br>");
 				strcat(sen,buff);
@@ -129,4 +130,4 @@ void processpool::runparent(){
 	}
 	close(epollfd);
 }
-processpool*processpool::pool=nullptr;
+processpool*processpool::pool=NULL;
