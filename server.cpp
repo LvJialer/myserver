@@ -5,9 +5,11 @@
 #include<netinet/in.h>
 #include<cstring>
 #include<cstdlib>
+#include"module.h"
 using namespace std;
 int main(int argc,char*argv[]){
 	cout<<"Welcome to myserver!"<<endl;
+	load_modules();
 	int listenfd=socket(AF_INET,SOCK_STREAM,0);
 	if(listenfd<0){cout<<"socket error"<<endl;exit(1);}
 	struct sockaddr_in address;

@@ -5,11 +5,14 @@
 #include<sys/epoll.h>
 #include<sys/wait.h>
 #include<iostream>
-#include<string>
 #include<dlfcn.h>
 #include<cstring>
 #include<cstdlib>
+#include"module.h"
+#include"response.h"
 using namespace std;
+extern module**modules;
+extern int module_num;
 processpool::processpool(int listenfd,int processnum):listenfd(listenfd),processnum(processnum),idx(-1){
 	subprocess=new process[processnum];
 	for(int i=0;i<processnum;i++){
@@ -43,72 +46,30 @@ void processpool::runchild(){
 			int newsock=accept(listenfd,reinterpret_cast<sockaddr*>(&clientaddr),&len);
 			if(newsock<0){cout<<"accept error"<<endl;}
 			else{cout<<"Accept success and child process No."<<idx<<" is working."<<endl;}
-			cout<<"Please choose the orders"<<endl;
-			string choose;
-			cin>>choose;
-			char sen[4096];for(int i=0;i<4096;i++){sen[i]='\0';}
-			char p[]="HTTP/1.0 200 OK\r\nServer:myserver\r\nContent-length:4096\r\nContent-type:text/html\r\n\r\n<html>\r\n<body>\r\n";
-			strcat(sen,p);
-			if(choose.find('a')!=string::npos){
-				void*handle;
-				void(*time)(char*);
-				handle=dlopen("./a_time.so",RTLD_LAZY);
-				if(handle==NULL){cout<<"dlfcn error"<<endl;}
-				*(void**)(&time)=dlsym(handle,"gettime");
-				char buff[50];for(int i=0;i<50;i++){buff[i]='\0';}
-				(*time)(buff);
-				char ma[]="<br><b>The time of the server is:</b><br>";
-				strcat(sen,ma);
-				strcat(sen,buff);
-				dlclose(handle);
+			char head[1024];
+			memset(head,'\0',1024*sizeof(char));
+			read(newsock,head,1024);
+			char method[10];
+			memset(method,'\0',10*sizeof(char));
+			char url[100];
+			memset(url,'\0',100*sizeof(char));
+			sscanf(head,"%s %s",method,url);
+			strcpy(url,url+1);
+			response*res=new response();
+			for(int i=0;i<module_num;i++){
+				if(strcmp(modules[i]->name,url)==0){
+					modules[i]->command(res);
+				}
 			}
-			if(choose.find('b')!=string::npos){
-				void*handle;
-				void(*version)(char*);
-				handle=dlopen("./b_version.so",RTLD_LAZY);
-				if(handle==NULL){cout<<"dlfcn error"<<endl;}
-				*(void**)(&version)=dlsym(handle,"getversion");
-				char*buff=new char[50];for(int i=0;i<50;i++){buff[i]='\0';}
-				(*version)(buff);
-				strcat(sen,"<br><b>The version of the server is:</b><br>");
-				strcat(sen,buff);
-				delete[]buff;
-				dlclose(handle);
-			}
-			if(choose.find('c')!=string::npos){
-				void*handle;
-				void(*disk)(char*);
-				handle=dlopen("./c_disk.so",RTLD_LAZY);
-				if(handle==NULL){cout<<"dlfcn error"<<endl;}
-				*(void**)(&disk)=dlsym(handle,"getdisk");
-				char*buff=new char[1300];for(int i=0;i<1300;i++){buff[i]='\0';}
-				(*disk)(buff);
-				strcat(sen,"<br><b>The state of the hard disk is:</b><br>");
-				strcat(sen,buff);
-				delete[]buff;
-				dlclose(handle);
-			}
-			if(choose.find('d')!=string::npos){
-				void*handle;
-				void(*process)(char*);
-				handle=dlopen("./d_process.so",RTLD_LAZY);
-				if(handle==NULL){cout<<"dlfcn error"<<endl;}
-				*(void**)(&process)=dlsym(handle,"getprocess");
-				char*buff=new char[4096];for(int i=0;i<4096;i++){buff[i]='\0';}
-				(*process)(buff);
-				strcat(sen,"<br><b>The Processes of the server is:</b><br>");
-				strcat(sen,buff);
-				delete[]buff;
-				dlclose(handle);
-			}
-			char q[]="</body>\r\n</html>\r\n";
-			strcat(sen,q);
-			int i=0;
-			for(;i<4096&&sen[i]!='\0';i++){}
-			char*se=new char[i];
-			for(int j=0;j<i;j++){se[j]=sen[j];}
-			send(newsock,se,i,0);
-			delete[]se;
+			char sen[4096];
+			sprintf(sen,"HTTP/1.1 200 OK\r\n");
+			sprintf(sen,"%sServer:myserver\r\n",sen);
+			sprintf(sen,"%sContent-length:%d\r\n",sen,strlen(res->body));
+			sprintf(sen,"%sContent-type:text/html\r\n\r\n",sen);
+			sprintf(sen,"%s%s",sen,res->body);
+				char md[]="<br><b>The Processes of the server is:</b><br>";
+			send(newsock,sen,strlen(sen),0);
+			close(newsock);
 		}
 	}
 }
