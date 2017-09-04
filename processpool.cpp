@@ -56,10 +56,17 @@ void processpool::runchild(){
 			sscanf(head,"%s %s",method,url);
 			strcpy(url,url+1);
 			response*res=new response();
+			bool ok=false;
 			for(int i=0;i<module_num;i++){
 				if(strcmp(modules[i]->name,url)==0){
+					ok=true;
 					modules[i]->command(res);
 				}
+			}
+			if(!ok){
+				FILE*fd=fopen("index.html","r");
+				fread(res->body,1,4096,fd);
+				fclose(fd);
 			}
 			char sen[4096];
 			sprintf(sen,"HTTP/1.1 200 OK\r\n");
@@ -67,7 +74,6 @@ void processpool::runchild(){
 			sprintf(sen,"%sContent-length:%d\r\n",sen,strlen(res->body));
 			sprintf(sen,"%sContent-type:text/html\r\n\r\n",sen);
 			sprintf(sen,"%s%s",sen,res->body);
-				char md[]="<br><b>The Processes of the server is:</b><br>";
 			send(newsock,sen,strlen(sen),0);
 			close(newsock);
 		}
