@@ -18,20 +18,26 @@ void load_modules(){
 	if(module_conf==NULL)return;
 	module_num=0;
 	char buf[100];
-	while(fgets(buf,sizeof(buf),module_conf))module_num++;
+	while(fgets(buf,sizeof(buf),module_conf)){
+		if(buf[0]!='#'){
+			module_num++;
+		}
+	}
 	fseek(module_conf,0,SEEK_SET);
 	modules=new module*[module_num];
-	for(int i=0;i<module_num;i++){
+	for(int i=0;i<module_num;){
+		fgets(buf,sizeof(buf),module_conf);
+		if(buf[0]=='#')continue;
 		char add[20];
 		char temp[20]="./";
 		char filename[20];
-		fscanf(module_conf,"%s",add);
+		sscanf(buf,"%s %s\n",add,filename);
 		if(strcmp(add,"add")!=0)return;
-		fscanf(module_conf,"%s\n",filename);
 		void*handle=dlopen(strcat(temp,filename),RTLD_NOW);
 		module*(*hook)()=(module*(*)())dlsym(handle,"hook");
 		modules[i]=hook();
 		modules[i]->handle=handle;
+		i++;
 	}
 	fclose(module_conf);
 }
