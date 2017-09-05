@@ -10,6 +10,7 @@
 #include<cstdlib>
 #include"module.h"
 #include"response.h"
+#include<cstdio>
 using namespace std;
 extern module**modules;
 extern int module_num;
@@ -64,14 +65,20 @@ void processpool::runchild(){
 				}
 			}
 			if(!ok){
-				FILE*fd=fopen("index.html","r");
+				FILE*fd;
+				if(strcmp("index.html",url)==0){
+					fd=fopen("index.html","r");
+				}
+				else{
+					fd=fopen("error.html","r");
+				}
 				fread(res->body,1,4096,fd);
 				fclose(fd);
 			}
 			char sen[4096];
 			sprintf(sen,"HTTP/1.1 200 OK\r\n");
 			sprintf(sen,"%sServer:myserver\r\n",sen);
-			sprintf(sen,"%sContent-length:%d\r\n",sen,strlen(res->body));
+			sprintf(sen,"%sContent-length:%lu\r\n",sen,strlen(res->body));
 			sprintf(sen,"%sContent-type:text/html\r\n\r\n",sen);
 			sprintf(sen,"%s%s",sen,res->body);
 			send(newsock,sen,strlen(sen),0);
