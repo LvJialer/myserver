@@ -1,5 +1,6 @@
 #ifndef MODULE_H
 #define MODULE_H
+
 #include"response.h"
 class module{
 public:
@@ -9,5 +10,4 @@ public:
 	module();
 	module(const char*name,void(*command)(response*));
 };
-void load_modules();
 #endif

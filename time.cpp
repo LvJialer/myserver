@@ -5,18 +5,15 @@
 #include<cstring>
 #include"module.h"
 #include"response.h"
+#include"chartoHTML.h"
 using namespace std;
 module*time_module;
 extern "C" void gettime(response*res){
 	FILE*fd=popen("uname -v","r");
 	if(fd==NULL){cout<<"popen error"<<endl;exit(1);}
-	char buf[100];
-	memset(buf,'\0',100*sizeof(char));
-	fread(buf,100,1,fd);
-	sprintf(res->body,"<html>\r\n<body>\r\n");
-	sprintf(res->body,"%s<br><b>The time of the server is:</b><br>",res->body);
-	sprintf(res->body,"%s%s",res->body,buf);
-	sprintf(res->body,"%s</body>\r\n</html>\r\n",res->body);
+	char c[4096];for(int i=0;i<4096;i++){c[i]='\0';}
+	fread(c,4096,1,fd);
+	chartoHTML(res->body,c,4096);
 	pclose(fd);
 }
 extern "C" module*hook(){
