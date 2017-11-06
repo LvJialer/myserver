@@ -1,19 +1,20 @@
 #ifndef PROCESSPOOL_H
 #define PROCESSPOOL_H
+
 #include"process.h"
+#define MAX_PROCESSES 128
 class processpool{
 private:
-	processpool(int listenfd,int processnum=4);
+	processpool(int listenfd,int processnum);
 	int processnum;
 	int listenfd;
 	process*subprocess;
-	int idx;
 	void runparent();
 	void runchild();
 	static processpool*pool;
 public:
 	~processpool();
 	void run();
-	static processpool*get(int listenfd);
+	static processpool*get(int listenfd,int processnum);
 };
 #endif

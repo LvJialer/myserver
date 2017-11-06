@@ -8,45 +8,51 @@
 #include<dlfcn.h>
 #include<cstring>
 #include<cstdlib>
-#include"module.h"
+#include"modulepool.h"
 #include"response.h"
 #include<cstdio>
 using namespace std;
-extern module**modules;
-extern int module_num;
-processpool::processpool(int listenfd,int processnum):listenfd(listenfd),processnum(processnum),idx(-1){
-	subprocess=new process[processnum];
+extern int processid;
+processpool::processpool(int listenfd,int processnum):listenfd(listenfd),processnum(processnum){
+	subprocess=new process[MAX_PROCESSES];
 	for(int i=0;i<processnum;i++){
-		if(pipe(subprocess[i].pipefd)<0){cout<<"pipe num "<<"i"<<" error"<<endl;}
+		//if(pipe(subprocess[i].pipefd)<0){cout<<"pipe num "<<i<<" error"<<endl;}
 		subprocess[i].mypid=fork();
-		if(subprocess[i].mypid<0){cout<<"fork num "<<"i"<<" error"<<endl;}
-		if(subprocess[i].mypid>0){close(subprocess[i].pipefd[0]);continue;}
-		else{close(subprocess[i].pipefd[1]);idx=i;break;}
+		if(subprocess[i].mypid<0){cout<<"fork num "<<i<<" error"<<endl;}
+		if(subprocess[i].mypid>0){
+			//close(subprocess[i].pipefd[0]);
+			continue;
+		}
+		else{
+			//close(subprocess[i].pipefd[1]);
+			processid=i;break;
+		}
 	}
 }
-processpool*processpool::get(int listenfd){
+processpool*processpool::get(int listenfd,int processnum){
 	if(pool==NULL){
-		pool=new processpool(listenfd);
+		pool=new processpool(listenfd,processnum);
 	}
 	return pool;
 }
 processpool::~processpool(){
 	delete[]subprocess;
+	delete pool;
 }
 void processpool::run(){
-	if(idx!=-1){runchild();return;}
+	if(processid!=-1){runchild();return;}
 	runparent();
 }
 void processpool::runchild(){
-	while(1){
+	for(;;){/*
 		int b;int*buf=&b;
 		read(subprocess[idx].pipefd[0],buf,sizeof(int));
-		if(*buf==idx){
+		if(*buf==idx){*/
 			struct sockaddr_in clientaddr;
 			unsigned int len=sizeof(clientaddr);
 			int newsock=accept(listenfd,reinterpret_cast<sockaddr*>(&clientaddr),&len);
 			if(newsock<0){cout<<"accept error"<<endl;}
-			else{cout<<"Accept success and child process No."<<idx<<" is working."<<endl;}
+			else{cout<<"Accept success and child process No."<<processid<<" is working."<<endl;}
 			char head[1024];
 			memset(head,'\0',1024*sizeof(char));
 			read(newsock,head,1024);
@@ -58,10 +64,11 @@ void processpool::runchild(){
 			strcpy(url,url+1);
 			response*res=new response();
 			bool ok=false;
-			for(int i=0;i<module_num;i++){
-				if(strcmp(modules[i]->name,url)==0){
+			modulepool*modulepools=modulepool::get();
+			for(int i=0;i<modulepools->module_num;i++){
+				if(strcmp(modulepools->modules[i]->name,url)==0){
 					ok=true;
-					modules[i]->command(res);
+					modulepools->modules[i]->command(res);
 				}
 			}
 			if(!ok){
@@ -83,10 +90,10 @@ void processpool::runchild(){
 			sprintf(sen,"%s%s",sen,res->body);
 			send(newsock,sen,strlen(sen),0);
 			close(newsock);
-		}
+		//}
 	}
 }
-void processpool::runparent(){
+void processpool::runparent(){/*
 	int epollfd=epoll_create(5);
 	epoll_event event;
 	event.events=EPOLLIN|EPOLLET;
@@ -102,6 +109,9 @@ void processpool::runparent(){
 			write(subprocess[i].pipefd[1],buf,sizeof(int));
 		}
 	}
-	close(epollfd);
+	close(epollfd);*/
+	for(;;){
+		sleep(100000);
+	}
 }
 processpool*processpool::pool=NULL;

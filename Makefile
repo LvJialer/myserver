@@ -1,8 +1,9 @@
 LDFLAGS=-shared -fPIC
 all:server a_time.so b_version.so c_disk.so d_process.so
-obj=module.o response.o
+obj=module.o response.o modulepool.o
 response.o:response.h
 module.o:module.h
+modulepool.o:modulepool.h
 server:server.o processpool.o $(obj)
 	g++ -rdynamic -o server $(obj) server.o processpool.o -ldl
 processpool.o:processpool.h process.h
