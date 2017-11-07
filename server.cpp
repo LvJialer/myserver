@@ -6,10 +6,13 @@
 #include<cstring>
 #include<cstdlib>
 #include"modulepool.h"
+#include"signalhandler.h"
+#define PROCESS_NUM 4
 using namespace std;
 int processid;
 int main(int argc,char*argv[]){
 	cout<<"Welcome to myserver!"<<endl;
+	initsignal();
 	processid=-1;
 	int listenfd=socket(AF_INET,SOCK_STREAM,0);
 	if(listenfd<0){cout<<"socket error"<<endl;exit(1);}
@@ -21,7 +24,7 @@ int main(int argc,char*argv[]){
 	address.sin_addr.s_addr=htonl(INADDR_ANY);
 	if(bind(listenfd,reinterpret_cast<struct sockaddr*>(&address),sizeof(address))<0){cout<<"bind error"<<endl;exit(1);}
 	if(listen(listenfd,5)<0){cout<<"listen error"<<endl;exit(1);}
-	processpool*pool=processpool::get(listenfd,4);
+	processpool*pool=processpool::get(listenfd,PROCESS_NUM);
 	if(pool){
 		pool->run();
 	}

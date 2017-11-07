@@ -3,6 +3,9 @@
 #include <cstring>
 #include <dlfcn.h>
 modulepool::modulepool(){
+	load();
+}
+void modulepool::load(){
 	FILE*module_conf=fopen("module.conf","r");
 	if(module_conf==NULL)return;
 	module_num=0;
@@ -29,12 +32,19 @@ modulepool::modulepool(){
 	}
 	fclose(module_conf);
 }
-modulepool::~modulepool(){
+void modulepool::unload(){
     for(int i=0;i<module_num;i++){
         dlclose(modules[i]->handle);
         delete modules[i];
     }
     delete[]modules;
+}
+void modulepool::reload(){
+	unload();
+	load();
+}
+modulepool::~modulepool(){
+	unload();
     delete modulepools;
 }
 modulepool*modulepool::get(){

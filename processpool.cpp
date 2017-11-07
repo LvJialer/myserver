@@ -15,17 +15,22 @@ using namespace std;
 extern int processid;
 processpool::processpool(int listenfd,int processnum):listenfd(listenfd),processnum(processnum){
 	subprocess=new process[MAX_PROCESSES];
-	for(int i=0;i<processnum;i++){
+	for(int i=0,j=0;j<processnum;i++){
 		//if(pipe(subprocess[i].pipefd)<0){cout<<"pipe num "<<i<<" error"<<endl;}
-		subprocess[i].mypid=fork();
-		if(subprocess[i].mypid<0){cout<<"fork num "<<i<<" error"<<endl;}
-		if(subprocess[i].mypid>0){
-			//close(subprocess[i].pipefd[0]);
-			continue;
-		}
-		else{
-			//close(subprocess[i].pipefd[1]);
-			processid=i;break;
+		if(subprocess[i].spawn==SPAWN_ZERO){
+			subprocess[i].spawn=SPAWN_ONE;
+			subprocess[i].mypid=fork();
+			if(subprocess[i].mypid<0){cout<<"fork num "<<i<<" error"<<endl;}
+			if(subprocess[i].mypid>0){
+				j++;
+				//close(subprocess[i].pipefd[0]);
+				continue;
+			}
+			else{
+				//close(subprocess[i].pipefd[1]);
+				processid=i;
+				break;
+			}
 		}
 	}
 }
@@ -111,7 +116,10 @@ void processpool::runparent(){/*
 	}
 	close(epollfd);*/
 	for(;;){
-		sleep(100000);
+		sigset_t set;
+		sigemptyset(&set);
+		sigprocmask(SIG_SETMASK,&set,NULL);
+		sigsuspend(&set);
 	}
 }
 processpool*processpool::pool=NULL;
