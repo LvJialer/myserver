@@ -11,6 +11,7 @@ private:
 	process*subprocess;
 	void runparent();
 	void runchild();
+	void spawnprocess(int i,int spawn);
 	static processpool*pool;
 public:
 	~processpool();

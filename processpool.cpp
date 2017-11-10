@@ -44,6 +44,9 @@ processpool::~processpool(){
 	delete[]subprocess;
 	delete pool;
 }
+void processpool::spawnprocess(int i,int spawn){
+
+}
 void processpool::run(){
 	if(processid!=-1){runchild();return;}
 	runparent();
