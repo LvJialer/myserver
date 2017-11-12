@@ -7,15 +7,18 @@ class processpool{
 private:
 	processpool(int listenfd,int processnum);
 	int processnum;
+	int processlast;
 	int listenfd;
 	process*subprocess;
 	void runparent();
 	void runchild();
-	void spawnprocess(int i,int spawn);
 	static processpool*pool;
 public:
+	void spawnprocess(int spawn);
 	~processpool();
 	void run();
 	static processpool*get(int listenfd,int processnum);
+	static processpool*get();
+	void reconfigure();
 };
 #endif

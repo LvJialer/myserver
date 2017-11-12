@@ -1,5 +1,6 @@
 #include "signalhandler.h"
 #include "modulepool.h"
+#include "processpool.h"
 #include <signal.h>
 #include <cstring>
 #include <cstdio>
@@ -9,6 +10,9 @@ static void singalhandler(int signo,siginfo_t*siginfo,void*ucontext){
         printf("b\n");
         fflush(stdout);
         modulepool::get()->reload();
+        processpool::get()->spawnprocess(SPAWN_TWO);
+        processpool::get()->reconfigure();
+        processpool::get()->run();
     }
 }
 int initsignal(){

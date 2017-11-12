@@ -13,12 +13,29 @@
 #include<cstdio>
 using namespace std;
 extern int processid;
-processpool::processpool(int listenfd,int processnum):listenfd(listenfd),processnum(processnum){
+processpool::processpool(int listenfd,int processnum):listenfd(listenfd),processnum(processnum),processlast(0){
 	subprocess=new process[MAX_PROCESSES];
-	for(int i=0,j=0;j<processnum;i++){
+	spawnprocess(SPAWN_ONE);
+}
+processpool*processpool::get(int listenfd,int processnum){
+	if(pool==NULL){
+		pool=new processpool(listenfd,processnum);
+	}
+	return pool;
+}
+processpool*processpool::get(){
+	return pool;
+}
+processpool::~processpool(){
+	delete[]subprocess;
+	delete pool;
+}
+void processpool::spawnprocess(int spawn){
+	int i=0;
+	for(int j=0;j<processnum;i++){
 		//if(pipe(subprocess[i].pipefd)<0){cout<<"pipe num "<<i<<" error"<<endl;}
 		if(subprocess[i].spawn==SPAWN_ZERO){
-			subprocess[i].spawn=SPAWN_ONE;
+			subprocess[i].spawn=spawn;
 			subprocess[i].mypid=fork();
 			if(subprocess[i].mypid<0){cout<<"fork num "<<i<<" error"<<endl;}
 			if(subprocess[i].mypid>0){
@@ -33,19 +50,21 @@ processpool::processpool(int listenfd,int processnum):listenfd(listenfd),process
 			}
 		}
 	}
+	processlast=processlast>(i+1)?processlast:(i+1);
 }
-processpool*processpool::get(int listenfd,int processnum){
-	if(pool==NULL){
-		pool=new processpool(listenfd,processnum);
+void processpool::reconfigure(){
+	for(int i=0;i<processlast;i++){
+		if(subprocess[i].spawn==SPAWN_ZERO){
+			continue;
+		}
+		else if(subprocess[i].spawn==SPAWN_ONE){
+			kill(subprocess[i].mypid,SIGQUIT);
+			subprocess[i].spawn=SPAWN_ZERO;
+		}
+		else if(subprocess[i].spawn==SPAWN_TWO){
+			subprocess[i].spawn=SPAWN_ONE;
+		}
 	}
-	return pool;
-}
-processpool::~processpool(){
-	delete[]subprocess;
-	delete pool;
-}
-void processpool::spawnprocess(int i,int spawn){
-
 }
 void processpool::run(){
 	if(processid!=-1){runchild();return;}
