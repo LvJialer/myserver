@@ -4,15 +4,16 @@
 #include <signal.h>
 #include <cstring>
 #include <cstdio>
-extern int processid;
 static void singalhandler(int signo,siginfo_t*siginfo,void*ucontext){
-    if(processid==-1){
-        printf("b\n");
-        fflush(stdout);
-        modulepool::get()->reload();
-        processpool::get()->spawnprocess(SPAWN_TWO);
-        processpool::get()->reconfigure();
-        processpool::get()->run();
+    switch (signo){
+    case SIGINT:
+        processpool::get()->reconfigureflag=1;
+        break;
+    case SIGCHLD:
+        processpool::get()->waitflag=1;
+        break;
+    default:
+        break;
     }
 }
 int initsignal(){
@@ -22,5 +23,6 @@ int initsignal(){
     sa.sa_flags=SA_SIGINFO|SA_RESTART;
     sigemptyset(&sa.sa_mask);
     sigaction(SIGINT,&sa,NULL);
+    sigaction(SIGCHLD,&sa,NULL);
     return 0;
 }

@@ -13,6 +13,7 @@ int processid;
 int main(int argc,char*argv[]){
 	cout<<"Welcome to myserver!"<<endl;
 	initsignal();
+	modulepool*modulepools=modulepool::get();
 	processid=-1;
 	int listenfd=socket(AF_INET,SOCK_STREAM,0);
 	if(listenfd<0){cout<<"socket error"<<endl;exit(1);}

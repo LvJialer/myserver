@@ -17,7 +17,7 @@ void modulepool::load(){
 	}
 	fseek(module_conf,0,SEEK_SET);
 	modules=new module*[module_num];
-	for(int i=0;i<module_num;i++){
+	for(int i=0;i<module_num;){
 		fgets(buf,sizeof(buf),module_conf);
 		if(buf[0]=='#')continue;
 		char add[20];
@@ -29,6 +29,7 @@ void modulepool::load(){
 		module*(*hook)()=(module*(*)())dlsym(handle,"hook");
 		modules[i]=hook();
 		modules[i]->handle=handle;
+		i++;		
 	}
 	fclose(module_conf);
 }

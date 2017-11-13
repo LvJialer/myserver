@@ -13,7 +13,7 @@
 #include<cstdio>
 using namespace std;
 extern int processid;
-processpool::processpool(int listenfd,int processnum):listenfd(listenfd),processnum(processnum),processlast(0){
+processpool::processpool(int listenfd,int processnum):listenfd(listenfd),processnum(processnum),processlast(0),reconfigureflag(0),waitflag(0){
 	subprocess=new process[MAX_PROCESSES];
 	spawnprocess(SPAWN_ONE);
 }
@@ -137,11 +137,25 @@ void processpool::runparent(){/*
 		}
 	}
 	close(epollfd);*/
+	sigset_t set,eset;
+	sigemptyset(&set);
+	sigaddset(&set,SIGINT);
+	sigaddset(&set,SIGCHLD);
+	sigprocmask(SIG_SETMASK,&set,NULL);
+	sigemptyset(&eset);
 	for(;;){
-		sigset_t set;
-		sigemptyset(&set);
-		sigprocmask(SIG_SETMASK,&set,NULL);
-		sigsuspend(&set);
+		sigsuspend(&eset);
+		if(waitflag==1){
+			waitflag=0;
+			while(waitpid(-1,NULL,0)>0);
+		}
+		if(reconfigureflag==1){
+			reconfigureflag=0;
+        	modulepool::get()->reload();
+        	spawnprocess(SPAWN_TWO);
+			if(processid!=-1){runchild();return;}
+			else{reconfigure();}
+		}
 	}
 }
 processpool*processpool::pool=NULL;

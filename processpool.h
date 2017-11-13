@@ -14,6 +14,8 @@ private:
 	void runchild();
 	static processpool*pool;
 public:
+	int reconfigureflag;
+	int waitflag;
 	void spawnprocess(int spawn);
 	~processpool();
 	void run();
