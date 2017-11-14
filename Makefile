@@ -1,3 +1,4 @@
+CXXFLAGS+=-g
 LDFLAGS=-shared -fPIC
 all:server a_time.so b_version.so c_disk.so d_process.so
 obj=module.o response.o modulepool.o signalhandler.o

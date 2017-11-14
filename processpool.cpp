@@ -147,7 +147,7 @@ void processpool::runparent(){/*
 		sigsuspend(&eset);
 		if(waitflag==1){
 			waitflag=0;
-			while(waitpid(-1,NULL,0)>0);
+			while(waitpid(-1,NULL,WNOHANG)>0);
 		}
 		if(reconfigureflag==1){
 			reconfigureflag=0;
